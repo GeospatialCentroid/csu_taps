@@ -1,3 +1,50 @@
+
+
+
+processSpec<- function(image, aoi, redEdge, NIR,red, green, greenMaskThres, layerName){
+  print("cropping and masking images")
+  r1 <- clipCropMask(image = image, aoi = aoi)
+  
+  print("generating indicies")
+  # calculate indicies 
+  i1 <- calcIndicies(image = r1, 
+               redEdge = redEdge,
+               NIR = NIR,
+               red = red)
+  
+  print("producing mask")
+  # green mask layer 
+  mask1 <- greenBandMask(image = r1,
+                         layerName = green,
+                         threshold = greenMaskThres)
+  # bind datasets
+  allRasters <- c(r1, rast(i1))
+  
+  # apply mask 
+  print("applying mask")
+  r2 <- applyMask(mask = mask1, 
+                  image = allRasters)
+  
+  rastWithMask <- c(r2, mask1)
+  
+  print("....extracting values")
+  r3 <- extractValuestoAreas(image = subset(r2, subset = layerName), plots = aoi, layerName)
+  # convert to a list of data frames before applying summary functions
+  r4 <- split(x = r3, f = r3$plotReference)
+  
+  ## summary stats
+  print("....generating statistics")
+  stats <- map(r4,calculateStatistics)%>%
+    bind_rows()
+  
+  
+  return(list(maskedImage = rastWithMask,
+              data = stats)) 
+}
+
+
+
+
 #' Process image
 #' 
 #' @description : take in some reference values, images, and plot spatial layers and returned histograms and summary stats

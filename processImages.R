@@ -8,13 +8,21 @@ lapply(X = list.files("source", full.names = TRUE, pattern = ".R"),
 
 
 # read in data ------------------------------------------------------------
-## this will change onces we develop the new area of interest 
-plots <- read_sf("data/8 5 23 TAPS_2023.geojson")%>%
-  filter(name != "Farm 0")
-
 images <- list.files("data/Tif Maps/TAPS_2023", pattern = ".tif",
                      full.names = TRUE, recursive = TRUE)
 # filter based on indice type
+## SPEC images
+spec <- images[grepl(pattern = "SPEC", x = images)] |>
+  sort() |>
+  map(rast)
+
+
+
+## RBG images 
+rgb <- images[grepl(pattern = "RGB", x = images)] |>
+  sort() |>
+  map(rast)
+
 ## NDVI
 ndvi <- images[grepl(pattern = "NDVI", x = images)] |>
   sort() |>
@@ -24,6 +32,10 @@ ndre <- images[grepl(pattern = "NDRE", x = images)] |>
   sort() |>
   map(rast)
   
+## this will change onces we develop the new area of interest 
+plots <- read_sf("data/8 5 23 TAPS_2023.geojson")%>%
+  filter(name != "Farm 0")%>%
+  sf::st_transform(crs = 32613)
 
 # define variables  -------------------------------------------------------
 dates <- c("080423","081723","082423") ## the order here needs to match the sort() order when reading in images above
@@ -31,6 +43,23 @@ dates <- c("080423","081723","082423") ## the order here needs to match the sort
 
 
 # process data 
+specResults <- processSpec(image = rast(spec),
+                           aoi = plots,
+                           redEdge = "Red edge",
+                           NIR = "NIR",
+                           red = "Red",
+                           green = "Green",
+                           greenMaskThres = 0.032,
+                           layerName = "NDVI"
+                           )
+
+writeRaster(x = specResults$ndvi, 
+            filename = "data/processedResults/ndviMask_0817.tif",
+            overwrite = TRUE)
+writeRaster(x = specResults$greenMask, 
+            filename = "data/processedResults/mask_0817.tif",
+            overwrite = TRUE)
+
 ## NDVI
 ndviResults <- map2(.x = ndvi,.y = dates, .f = ~processImagery(image = .x,
                                                               aoi = aoi,

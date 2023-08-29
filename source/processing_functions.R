@@ -14,16 +14,61 @@ clipCropMask <- function(image, aoi){
 }
 
 
-removeshadow <-function(image, threshold){
+greenBandMask <-function(image, layerName, threshold){
   # reassign values below a threshold to NA and return an image   
   # calculate the total number of values below the threshold 
   # return image 
-  m <- c(0, threshold, NA)
+  
+  i2 <- terra::subset(image, subset = layerName)
+  
+  m <- c(0, threshold, NA,
+         threshold, 1 , 1)
   rclmat <- matrix(m, ncol=3, byrow=TRUE)
-  rc1 <- classify(image, rclmat, include.lowest=TRUE)
-
+  rc1 <- classify(i2, rclmat, include.lowest=TRUE)
+  names(rc1) <-"greenMask"
   return(rc1)
 }
+
+applyMask <- function(mask, image){
+  m1 <- mask * image
+  names(m1) <- names(image)
+  return(m1)
+}
+
+calcIndicies <- function(image, redEdge, NIR, red){
+  
+  red <- terra::subset(image, subset = red)
+  
+  NIR <- terra::subset(image, subset = NIR)
+  
+  redEdge <- terra::subset(image, subset = redEdge)
+  
+  # NDRE
+  ## (NIR – RedEdge)/(NIR + RedEdge)
+  ndre <- (NIR - redEdge)/(NIR + redEdge) 
+  names(ndre) <- "NDRE"
+  # NDVI
+  ## (NIR-Red)/(NIR+Red) 
+  ndvi <- (NIR - red)/(NIR + red)
+  names(ndvi) <- "NDVI"
+  
+  return(list(
+    ndvi = ndvi,
+    ndre = ndre
+  ))
+}
+
+# 
+# removeshadow <-function(image, threshold){
+#   # reassign values below a threshold to NA and return an image   
+#   # calculate the total number of values below the threshold 
+#   # return image 
+#   m <- c(0, threshold, NA)
+#   rclmat <- matrix(m, ncol=3, byrow=TRUE)
+#   rc1 <- classify(image, rclmat, include.lowest=TRUE)
+# 
+#   return(rc1)
+# }
 
 extractValuestoAreas <- function(image,plots, name){
   # spatial intersection between plots and images 
