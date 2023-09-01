@@ -35,6 +35,19 @@ applyMask <- function(mask, image){
   return(m1)
 }
 
+calcNDVI <- function(image, NIR, red){
+  red <- terra::subset(image, subset = red)
+  
+  NIR <- terra::subset(image, subset = NIR)
+  
+  # NDVI
+  ## (NIR-Red)/(NIR+Red) 
+  ndvi <- (NIR - red)/(NIR + red)
+  names(ndvi) <- "ndvi"
+  
+  return(ndvi)
+}
+
 calcIndicies <- function(image, redEdge, NIR, red){
   
   red <- terra::subset(image, subset = red)

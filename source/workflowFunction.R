@@ -1,4 +1,28 @@
 
+fullAreaNDVIMasked <- function(image, NIR,red, green, greenMaskThres){
+  ## processing on the full image area rather then a specific subset 
+  r1 <- terra::subset(image, subset = "Alpha", negate = TRUE)
+  
+  print("generating indicies")
+  # calculate indicies 
+  ndvi <- calcNDVI(image = r1, 
+                   NIR = NIR,
+                   red = red)
+
+  print("producing mask")
+  # green mask layer 
+  mask1 <- greenBandMask(image = r1,
+                         layerName = green,
+                         threshold = greenMaskThres)
+  
+  # apply mask 
+  print("applying mask")
+  r2 <- applyMask(mask = mask1, 
+                  image = ndvi)
+  
+  return(r2)
+}
+
 
 
 processSpec<- function(image, aoi, redEdge, NIR,red, green, greenMaskThres, layerName){
