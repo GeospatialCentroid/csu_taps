@@ -8,7 +8,7 @@ lapply(X = list.files("source", full.names = TRUE, pattern = ".R"),
 
 
 # read in data ------------------------------------------------------------
-images <- list.files("data/Tif Maps/TAPS_2023", pattern = ".tif",
+images <- list.files("data/TAPS_2023/TAPS_2023/Tif Maps/TAPS_2023", pattern = "\\.tif$",
                      full.names = TRUE, recursive = TRUE)
 
 # filter based on indice type
@@ -46,13 +46,20 @@ dates <- c("080423","081723","082423") ## the order here needs to match the sort
 # process data 
 
 # generaete NDVI mask layer  ---------------------------------------------
-ndviMask <- fullAreaNDVIMasked(image = rast(spec),
+ndviMask <- fullAreaNDVIMasked(image = spec[[2]],
                                NIR = "NIR",
                                red = "Red",
                                green = "Green",
                                greenMaskThres = 0.032
                                  )
-writeRaster(x = ndviMask, filename = "data/processedResults/maskNDVI_0817.tif")
+### purrr process 
+### cu
+
+
+
+
+## math
+writeRaster(x = ndviMask, filename = "data/processedResults/maskNDVI_0824.tif")
 
 # single image processing -------------------------------------------------
 specResults <- processSpec(image = rast(spec),
