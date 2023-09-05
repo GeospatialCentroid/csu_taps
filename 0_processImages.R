@@ -46,7 +46,7 @@ dates <- c("080423","081723","082423") ## the order here needs to match the sort
 # process data 
 
 # generaete NDVI mask layer  ---------------------------------------------
-ndviMask <- fullAreaNDVIMasked(image = rast(spec),
+ndviMask <- fullAreaNDVIMasked(image = spec[[2]],
                                NIR = "NIR",
                                red = "Red",
                                green = "Green",
