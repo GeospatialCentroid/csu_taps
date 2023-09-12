@@ -4,7 +4,11 @@
 ## area stats on NDVI and NDRE
 ### mean, std, histogram 
 
-
+reworkPlotReference <- function(aoi){
+  p1 <- st_cast(aoi, "POLYGON")%>%
+    mutate(referenceID = 1:nrow(.))
+  return(p1)
+}
 
 clipCropMask <- function(image, aoi){
   # remove all areas outside of of the plot areas
@@ -86,14 +90,25 @@ calcIndicies <- function(image, redEdge, NIR, red){
 extractValuestoAreas <- function(image,plots, name){
   # spatial intersection between plots and images 
   # return: data frame of values associate with each plot 
-  t1 <- terra::extract(x = image, y = plots)
-  colnames(t1) <- c("plotReference",name)
-  ###!!! will need to add some reference to the acutal plot name here but the
-  ### current datasets does not have a meaningful value to apply. 
-  # for(i in unique(t1$plotReference)){
-  #   t1$plotReference[t1$plotReference == i] <- plots$name[i]
-  # }
   
+  plots2 <- plots %>%
+    select(name)%>%
+    vect()
+  # plots2 <- plots2[1:10,] #testing
+  df <- data.frame(matrix(nrow = nrow(plots), ncol = 2))
+  colnames(df) <- c("plotReference",name)
+  df$plotReference <- plots2$name
+  dfs <- list() 
+  
+  for(i in seq_along(plots2$name)){
+    print(i)
+    p1 <- plots2[i, ]
+    df2 <-  terra::extract(x = image, y = p1, ID = FALSE)
+    df2$plotReference <- p1$name
+    dfs[[i]] <- df2
+  }  
+  t1 <- bind_rows(dfs)%>%
+    select("plotReference", `name`)
   return(t1)
 }
 
@@ -112,13 +127,17 @@ generateHistogram <- function(data, name){
   
 ### set to be ran with the purrr map function
 calculateStatistics <- function(data){
-  # calculate the mean, median, std, and other statistics for each plot 
+  # calculate the mean, median, std, and total masked for each plot
   vals <- data[,2]
+  totalCells <- length(vals)
+  totalMask <- length(vals[is.na(vals)])
+  
   df <- data[1,]%>%
     mutate(mean = mean(vals, na.rm = TRUE),
            standardDev = sd(vals, na.rm = TRUE),
-           median = median(vals, na.rm = TRUE))%>%
-    select(1,3,4,5)
+           median = median(vals, na.rm = TRUE),
+           percentMasked = (length(vals[is.na(vals)])/length(vals))*100 )%>%
+    select(1,3:ncol(.))
   return(df)
 }
 

@@ -52,9 +52,11 @@ processSpec<- function(image, aoi, redEdge, NIR,red, green, greenMaskThres, laye
   rastWithMask <- c(r2, mask1)
   
   print("....extracting values")
-  r3 <- extractValuestoAreas(image = subset(r2, subset = layerName), plots = aoi, layerName)
+  r3 <- extractValuestoAreas(image = subset(r2, subset = layerName), 
+                             plots = aoi,
+                             name = layerName)
   # convert to a list of data frames before applying summary functions
-  r4 <- split(x = r3, f = r3$plotReference)
+  r4 <- split(x = r3, f = r3[,1])
   
   ## summary stats
   print("....generating statistics")

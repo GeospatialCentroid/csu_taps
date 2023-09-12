@@ -8,8 +8,14 @@ lapply(X = list.files("source", full.names = TRUE, pattern = ".R"),
 
 
 # read in data ------------------------------------------------------------
-images <- list.files("data/TAPS_2023/TAPS_2023/Tif Maps/TAPS_2023", pattern = "\\.tif$",
+## server 
+images <- list.files("data/TAPS_2023/TAPS_2023/Tif Maps/TAPS_2023", pattern = "//.tif$",
                      full.names = TRUE, recursive = TRUE)
+## centroid 
+images <- list.files("data/TAPS_2023/TAPS_2023/Tif Maps/TAPS_2023", pattern = "//.tif$",
+                     full.names = TRUE, recursive = TRUE)
+
+
 
 # filter based on indice type
 ## this read in all images -- up to three
@@ -34,10 +40,10 @@ ndre <- images[grepl(pattern = "NDRE", x = images)] |>
   map(rast)
   
 ## this will change onces we develop the new area of interest 
-plots <- read_sf("data/8 5 23 TAPS_2023.geojson")%>%
-  filter(name != "Farm 0")%>%
-  sf::st_transform(crs = 32613)
-
+plots <- read_sf("data/TAPS_2023/TAPS_Plots/FarmFlight 9.shp")
+## export file for reference 
+# st_write(obj = plots, dsn = "data/TAPS_2023/TAPS_2023/TAPS_Subplots/annotations/poly_withRef.gpkg")
+  
 # define variables  -------------------------------------------------------
 dates <- c("080423","081723","082423") ## the order here needs to match the sort() order when reading in images above
 
@@ -62,7 +68,7 @@ ndviMask <- fullAreaNDVIMasked(image = spec[[2]],
 writeRaster(x = ndviMask, filename = "data/processedResults/maskNDVI_0824.tif")
 
 # single image processing -------------------------------------------------
-specResults <- processSpec(image = rast(spec),
+specResults <- processSpec(image = spec[[2]],
                            aoi = plots,
                            redEdge = "Red edge",
                            NIR = "NIR",
@@ -73,14 +79,11 @@ specResults <- processSpec(image = rast(spec),
                            )
 
 
-# writeRaster(x = specResults$ndvi, 
-#             filename = "data/processedResults/ndviMask_0817.tif",
-#             overwrite = TRUE)
+writeRaster(x = specResults$maskedImage,
+            filename = "data/processedResults/bands_indicies_Mask_0824.tif",
+            overwrite = TRUE)
 
-# writeRaster(x = specResults$greenMask, 
-#             filename = "data/processedResults/mask_0817.tif",
-#             overwrite = TRUE)
-
+write.csv(x = stats, file = "data/processedResults/ndvi08_24_summaryStats_labeled.csv")
 
 # multiple image processing -----------------------------------------------
 ## NDVI
