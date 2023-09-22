@@ -93,7 +93,7 @@ extractValuestoAreas <- function(image,plots, name){
   
   plots2 <- plots %>%
     select(name)%>%
-    vect()
+    terra::vect()
   # plots2 <- plots2[1:10,] #testing
   df <- data.frame(matrix(nrow = nrow(plots), ncol = 2))
   colnames(df) <- c("plotReference",name)

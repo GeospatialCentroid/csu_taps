@@ -12,10 +12,10 @@ lapply(X = list.files("source", full.names = TRUE, pattern = ".R"),
 images <- list.files("data/TAPS_2023/TAPS_2023/Tif Maps/TAPS_2023", pattern = "//.tif$",
                      full.names = TRUE, recursive = TRUE)
 ## centroid 
-images <- list.files("data/TAPS_2023/TAPS_2023/Tif Maps/TAPS_2023", pattern = "//.tif$",
+images <- list.files("data/TAPS_2023/TAPS_2023/Tif Maps/TAPS_2023", pattern = ".tif$",
                      full.names = TRUE, recursive = TRUE)
 
-
+plot(spec[[1]]$Green)
 
 # filter based on indice type
 ## this read in all images -- up to three
@@ -24,23 +24,24 @@ spec <- images[grepl(pattern = "SPEC", x = images)] |>
   sort() |>
   map(rast)
 
-## RBG images 
-rgb <- images[grepl(pattern = "RGB", x = images)] |>
-  sort() |>
-  map(rast)
-
-## NDVI
-ndvi <- images[grepl(pattern = "NDVI", x = images)] |>
-  sort() |>
-  map(rast)
-
-## NDRE 
-ndre <- images[grepl(pattern = "NDRE", x = images)] |>
-  sort() |>
-  map(rast)
+# ## RBG images 
+# rgb <- images[grepl(pattern = "RGB", x = images)] |>
+#   sort() |>
+#   map(rast)
+# 
+# ## NDVI
+# ndvi <- images[grepl(pattern = "NDVI", x = images)] |>
+#   sort() |>
+#   map(rast)
+# 
+# ## NDRE 
+# ndre <- images[grepl(pattern = "NDRE", x = images)] |>
+#   sort() |>
+#   map(rast)
   
 ## this will change onces we develop the new area of interest 
-plots <- read_sf("data/TAPS_2023/TAPS_Plots/FarmFlight 9.shp")
+plots <- sf::read_sf("qgis/referenceGrid_0920.gpkg")
+View(plots)
 ## export file for reference 
 # st_write(obj = plots, dsn = "data/TAPS_2023/TAPS_2023/TAPS_Subplots/annotations/poly_withRef.gpkg")
   
@@ -52,23 +53,19 @@ dates <- c("080423","081723","082423") ## the order here needs to match the sort
 # process data 
 
 # generaete NDVI mask layer  ---------------------------------------------
-ndviMask <- fullAreaNDVIMasked(image = spec[[2]],
+ndviMask <- fullAreaNDVIMasked(image = spec[[4]],
                                NIR = "NIR",
                                red = "Red",
                                green = "Green",
                                greenMaskThres = 0.032
                                  )
-### purrr process 
-### cu
 
 
-
-
-## math
-writeRaster(x = ndviMask, filename = "data/processedResults/maskNDVI_0824.tif")
+## export raster
+writeRaster(x = ndviMask, filename = "data/processedResults/maskNDVI_0920.tif")
 
 # single image processing -------------------------------------------------
-specResults <- processSpec(image = spec[[2]],
+specResults <- processSpec(image = spec[[4]],
                            aoi = plots,
                            redEdge = "Red edge",
                            NIR = "NIR",
@@ -78,14 +75,18 @@ specResults <- processSpec(image = spec[[2]],
                            layerName = "ndvi"
                            )
 
-
+# export multilayer raster 
 writeRaster(x = specResults$maskedImage,
-            filename = "data/processedResults/bands_indicies_Mask_0824.tif",
+            filename = "data/processedResults/bands_indicies_Mask_0920.tif",
             overwrite = TRUE)
 
-write.csv(x = stats, file = "data/processedResults/ndvi08_24_summaryStats_labeled.csv")
+# export the data results
+write.csv(x = specResults$data, file = "data/processedResults/ndvi09_20_summaryStats_labeled.csv")
 
 # multiple image processing -----------------------------------------------
+### older workflow that has been moved away from. (center on processing multiple dates
+### of images at once). keeping for now be should probably be fully integrated or removed. 
+
 ## NDVI
 ### using purrr to process multiple images... not an active part of the workflow.
 ##! 20230901 not a current part of the analysis
