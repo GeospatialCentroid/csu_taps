@@ -40,8 +40,17 @@ spec <- images[grepl(pattern = "SPEC", x = images)] |>
 #   map(rast)
   
 ## this will change onces we develop the new area of interest 
-plots <- sf::read_sf("qgis/referenceGrid_0920.gpkg")
-View(plots)
+plots <- sf::read_sf("qgis/referenceGird_0906.gpkg")
+sort(plots$name)
+### temp replace for a specific feature 
+# plots$name[grepl(pattern ="12 A-Ref" , x = plots$name)] <- "12 A-Ref-change"
+# plots$name[grepl(pattern = "8 A-Ref", x = plots$name)] <- "12 A-Ref"
+# plots$name[grepl(pattern ="12 A-Ref-change" , x = plots$name)] <- "8 A-Ref"
+
+
+write_sf(plots, "qgis/referenceGird_0906.gpkg", delete_layer = TRUE)
+
+
 ## export file for reference 
 # st_write(obj = plots, dsn = "data/TAPS_2023/TAPS_2023/TAPS_Subplots/annotations/poly_withRef.gpkg")
   
